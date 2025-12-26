@@ -1,0 +1,120 @@
+-- Galaxy Hub | Loader Script
+
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+-- Character function
+local function getChar()
+    return LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+end
+
+-- GUI
+local gui = Instance.new("ScreenGui")
+gui.Name = "GalaxyHub"
+gui.ResetOnSpawn = false
+gui.Parent = PlayerGui
+
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 330, 0, 430)
+main.Position = UDim2.new(0.5, -165, 0.5, -215)
+main.BackgroundColor3 = Color3.fromRGB(15, 0, 35)
+main.BorderSizePixel = 0
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 20)
+
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1,0,0,50)
+title.BackgroundTransparency = 1
+title.Text = "🌌 Galaxy Hub"
+title.TextScaled = true
+title.Font = Enum.Font.GothamBold
+title.TextColor3 = Color3.new(1,1,1)
+
+-- Button maker
+local function makeBtn(txt, y, callback)
+    local b = Instance.new("TextButton", main)
+    b.Size = UDim2.new(0,260,0,45)
+    b.Position = UDim2.new(0,35,0,y)
+    b.Text = txt
+    b.TextScaled = true
+    b.Font = Enum.Font.Gotham
+    b.TextColor3 = Color3.new(1,1,1)
+    b.BackgroundColor3 = Color3.fromRGB(90, 0, 170)
+    Instance.new("UICorner", b)
+    b.MouseButton1Click:Connect(callback)
+end
+
+-- SPEED
+makeBtn("Speed 50", 70, function()
+    getChar():WaitForChild("Humanoid").WalkSpeed = 50
+end)
+
+-- JUMP
+makeBtn("Jump 120", 125, function()
+    getChar():WaitForChild("Humanoid").JumpPower = 120
+end)
+
+-- ESP
+local esp = false
+makeBtn("Toggle ESP", 180, function()
+    esp = not esp
+    for _,p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+            if hrp then
+                if esp then
+                    if not hrp:FindFirstChild("ESP") then
+                        local box = Instance.new("BoxHandleAdornment")
+                        box.Name = "ESP"
+                        box.Adornee = hrp
+                        box.Size = Vector3.new(4,6,2)
+                        box.Color3 = Color3.fromRGB(0,255,255)
+                        box.Transparency = 0.5
+                        box.AlwaysOnTop = true
+                        box.Parent = hrp
+                    end
+                else
+                    if hrp:FindFirstChild("ESP") then
+                        hrp.ESP:Destroy()
+                    end
+                end
+            end
+        end
+    end
+end)
+
+-- USERNAMES
+makeBtn("Show Names", 235, function()
+    for _,p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            if not p.Character:FindFirstChild("NameTag") then
+                local bb = Instance.new("BillboardGui")
+                bb.Name = "NameTag"
+                bb.Adornee = p.Character:WaitForChild("Head")
+                bb.Size = UDim2.new(0,100,0,30)
+                bb.AlwaysOnTop = true
+
+                local t = Instance.new("TextLabel", bb)
+                t.Size = UDim2.new(1,0,1,0)
+                t.BackgroundTransparency = 1
+                t.Text = p.Name
+                t.TextScaled = true
+                t.TextColor3 = Color3.new(1,1,1)
+
+                bb.Parent = p.Character
+            end
+        end
+    end
+end)
+
+-- LAG (CLIENT ONLY)
+makeBtn("Lag Client", 290, function()
+    for i = 1, 500 do
+        local part = Instance.new("Part")
+        part.Anchored = true
+        part.Size = Vector3.new(10,10,10)
+        part.Position = Vector3.new(math.random(-60,60), 25, math.random(-60,60))
+        part.Parent = workspace
+    end
+end)
+
