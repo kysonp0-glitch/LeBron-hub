@@ -1,0 +1,130 @@
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
+local LocalPlayer = Players.LocalPlayer
+
+local speedEnabled = false
+local targetSpeed = 29.5
+
+-- Force speed every frame (Fixes tool/brainrot reset)
+RunService.Stepped:Connect(function()
+    if speedEnabled then
+        local char = LocalPlayer.Character
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if hum then hum.WalkSpeed = targetSpeed end
+    end
+end)
+
+local gui = Instance.new("ScreenGui", LocalPlayer:WaitForChild("PlayerGui"))
+gui.Name = "BallHogHub_V6"
+gui.ResetOnSpawn = false
+
+-- THE TOGGLE BUTTON (Opens and Closes the Hub)
+local toggleBtn = Instance.new("TextButton", gui)
+toggleBtn.Size = UDim2.new(0, 45, 0, 45)
+toggleBtn.Position = UDim2.new(0.5, -22, 0, 15)
+toggleBtn.BackgroundColor3 = Color3.fromRGB(255, 110, 20)
+toggleBtn.Text = "🏀"
+toggleBtn.TextSize = 20
+toggleBtn.Font = Enum.Font.FredokaOne
+toggleBtn.TextColor3 = Color3.new(1,1,1)
+toggleBtn.ZIndex = 5
+Instance.new("UICorner", toggleBtn)
+local btnStroke = Instance.new("UIStroke", toggleBtn)
+btnStroke.Thickness = 2
+btnStroke.Color = Color3.new(1,1,1)
+
+-- Main Frame
+local main = Instance.new("Frame", gui)
+main.Size = UDim2.new(0, 260, 0, 0) -- Starts at 0 for animation
+main.Position = UDim2.new(0.5, -130, 0, 70)
+main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+main.ClipsDescendants = true
+main.Active = true
+Instance.new("UICorner", main).CornerRadius = UDim.new(0, 15)
+Instance.new("UIStroke", main).Color = Color3.fromRGB(255, 110, 20)
+Instance.new("UIDragDetector", main)
+
+-- Title
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1, 0, 0, 45)
+title.BackgroundTransparency = 1
+title.Text = "BALLHOG HUB"
+title.Font = Enum.Font.FredokaOne
+title.TextColor3 = Color3.fromRGB(255, 110, 20)
+title.TextSize = 20
+
+local scroll = Instance.new("ScrollingFrame", main)
+scroll.Size = UDim2.new(1, -20, 1, -60)
+scroll.Position = UDim2.new(0, 10, 0, 50)
+scroll.BackgroundTransparency = 1
+scroll.CanvasSize = UDim2.new(0, 0, 0, 260)
+scroll.ScrollBarThickness = 0
+Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 8)
+
+local function makeBtn(txt, callback)
+    local b = Instance.new("TextButton", scroll)
+    b.Size = UDim2.new(0, 200, 0, 40)
+    b.Text = txt
+    b.Font = Enum.Font.FredokaOne
+    b.TextColor3 = Color3.new(1, 1, 1)
+    b.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+    Instance.new("UICorner", b)
+    b.MouseButton1Click:Connect(function() callback(b) end)
+end
+
+-- OPEN / CLOSE LOGIC
+local isOpen = false
+toggleBtn.MouseButton1Click:Connect(function()
+    isOpen = not isOpen
+    local targetSize = isOpen and UDim2.new(0, 260, 0, 280) or UDim2.new(0, 260, 0, 0)
+    
+    -- Smooth slide animation
+    TweenService:Create(main, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {Size = targetSize}):Play()
+    
+    -- Spin the ball button
+    TweenService:Create(toggleBtn, TweenInfo.new(0.4), {Rotation = isOpen and 180 or 0}):Play()
+end)
+
+-- FEATURES
+makeBtn("Speed Loop: OFF", function(b)
+    speedEnabled = not speedEnabled
+    b.Text = speedEnabled and "Speed Loop: ON" or "Speed Loop: OFF"
+    TweenService:Create(b, TweenInfo.new(0.2), {BackgroundColor3 = speedEnabled and Color3.fromRGB(255, 110, 20) or Color3.fromRGB(45, 45, 45)}):Play()
+end)
+
+makeBtn("Gravity: OFF", function(b)
+    local active = Workspace.Gravity == 25
+    Workspace.Gravity = active and 196.2 or 25
+    b.Text = active and "Gravity: OFF" or "Gravity: ON"
+    TweenService:Create(b, TweenInfo.new(0.2), {BackgroundColor3 = active and Color3.fromRGB(45, 45, 45) or Color3.fromRGB(255, 110, 20)}):Play()
+end)
+
+makeBtn("Refresh ESP", function()
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            if p.Character:FindFirstChild("Highlight") then p.Character.Highlight:Destroy() end
+            Instance.new("Highlight", p.Character).FillColor = Color3.fromRGB(255, 110, 20)
+        end
+    end
+end)
+
+-- MINIMIZE HUB (Moves the toggle button to the side)
+local minimized = false
+makeBtn("Minimize Hub", function()
+    minimized = not minimized
+    local targetPos = minimized and UDim2.new(0, 10, 0, 10) or UDim2.new(0.5, -22, 0, 15)
+    TweenService:Create(toggleBtn, TweenInfo.new(0.5, Enum.EasingStyle.Quart), {Position = targetPos}):Play()
+    if isOpen then -- Close it if it's open
+        isOpen = false
+        TweenService:Create(main, TweenInfo.new(0.3), {Size = UDim2.new(0, 260, 0, 0)}):Play()
+    end
+end)
+
+makeBtn("Destroy Hub", function() gui:Destroy() end)
+
+
+
+
+
